@@ -8,8 +8,8 @@
     <artifactId>CS6650-FinalProject</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>14</maven.compiler.source>
+        <maven.compiler.target>14</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -24,6 +24,12 @@
             <artifactId>dotenv-java</artifactId>
             <version>2.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>5.16.3</version>
+        </dependency>
+
     </dependencies>
 
 

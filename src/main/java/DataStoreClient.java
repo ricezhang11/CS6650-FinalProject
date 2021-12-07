@@ -72,6 +72,7 @@ public class DataStoreClient {
                 // access localhost at docker's host machine through host.docker.internal
 //                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
                 ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
+                // send message to a message queue
                 String result = c.operate(request);
 //                Note that to avoid these initial requests to overlap with each other (stuck in the same Paxos round) as much as possible,
 //                thread will sleep for 15 second before sending out the next request to account for the acceptor failures.

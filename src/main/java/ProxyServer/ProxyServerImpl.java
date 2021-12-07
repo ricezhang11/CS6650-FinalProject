@@ -195,7 +195,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception happened:" + e);
         }
 
-
+        //TODO: send messages to clients that they should update their files
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
 
         return response.serialize();
