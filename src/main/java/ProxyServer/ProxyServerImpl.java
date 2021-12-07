@@ -1,6 +1,7 @@
 package ProxyServer;
 
 import Acceptor.*;
+import Database.Database;
 import JMSReceiver.JMSReceiver;
 import Learner.Learner;
 import Utility.*;
@@ -196,6 +197,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         } catch (Exception e) {
             logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception happened:" + e);
         }
+
 
         //TODO: send messages to clients that they should update their files
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");

@@ -67,7 +67,6 @@ public class DataStoreClient {
         DataStoreClient client = new DataStoreClient();
         Random random = new Random();
         String assignedServer = null;
-
         // send initial requests
         for (String request: client.getInitialRequests()) {
             try {
@@ -77,13 +76,13 @@ public class DataStoreClient {
 //                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
                 ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
                 // send message to a message queue
-                client.jmsPublisher.sendMessage(request);
-//                String result = c.operate(request);
+//                client.jmsPublisher.sendMessage(request);
+                String result = c.operate(request);
 //                Note that to avoid these initial requests to overlap with each other (stuck in the same Paxos round) as much as possible,
 //                thread will sleep for 15 second before sending out the next request to account for the acceptor failures.
 //                Therefore, the initial requests take some time to finish
 //                Thread.sleep(15000);
-//                logger.info(new Timestamp(System.currentTimeMillis()) + result );
+                logger.info(new Timestamp(System.currentTimeMillis()) + result );
             }
             catch (MalformedURLException murle) {
                 logger.warning(new Timestamp(System.currentTimeMillis()) + " MalformedURLException " + murle);
