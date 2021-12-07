@@ -1,9 +1,12 @@
 package ProxyServer;
 
 import Acceptor.*;
+import Database.Database;
+import JMSReceiver.JMSReceiver;
 import Learner.Learner;
 import Utility.*;
 
+import javax.jms.JMSException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -25,7 +28,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
     Logger logger = Logger.getLogger("ProxyServerImpl");
     boolean isLeader;
 
-    public ProxyServerImpl(String port) throws java.rmi.RemoteException {
+    public ProxyServerImpl(String port) throws java.rmi.RemoteException, JMSException {
         super();
         this.port = port;
         this.initializeAcceptorAddresses();
@@ -244,6 +247,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         } catch (Exception e) {
             logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception happened:" + e);
         }
+
 
         //TODO: send messages to clients that they should update their files
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
