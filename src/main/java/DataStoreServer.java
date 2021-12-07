@@ -35,7 +35,6 @@ public class DataStoreServer {
             } catch (Exception e) {
                 logger.info(new Timestamp(System.currentTimeMillis()) + " Trouble: " + e);
             }
-
         }
     }
 

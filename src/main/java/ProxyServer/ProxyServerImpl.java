@@ -1,7 +1,7 @@
 package ProxyServer;
 
 import Acceptor.*;
-import Database.Database;
+//import Database.Database;
 import JMSReceiver.JMSReceiver;
 import Learner.Learner;
 import Utility.*;
@@ -26,44 +26,13 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
     List<String> acceptorAddresses;
     List<String> learnerAddresses;
     Logger logger = Logger.getLogger("ProxyServerImpl");
-    boolean isLeader;
 
-    public ProxyServerImpl(String port) throws java.rmi.RemoteException, JMSException {
+    public ProxyServerImpl(String port) throws IOException, JMSException {
         super();
         this.port = port;
         this.initializeAcceptorAddresses();
         this.initializeLearnerAddresses();
     }
-    public List<String> getAllServerPort() {
-        List<String> listOfServerPort = new ArrayList<>();
-        for(String s : acceptorAddresses) {
-            int index1 = s.indexOf(":", 4);
-            int index2 = s.indexOf("/", index1);
-            String serverPort = s.substring(index1 + 1, index2);
-            listOfServerPort.add(serverPort);
-        }
-        return listOfServerPort;
-    }
-
-
-    public void electLeader() throws RemoteException {
-        List<String> listOfServerPort = getAllServerPort();
-        Collections.sort(listOfServerPort);
-        for(int i = listOfServerPort.size() - 1; i > 0; i--) {
-
-            if(rmiIsHealth(listOfServerPort.get(i))) {
-                if(listOfServerPort.get(i).equals(port)) {
-                    isLeader = true;
-                    logger.info(new Timestamp(System.currentTimeMillis()) + " Proposer with port number "
-                            + listOfServerPort.get(i) + " is elected as leader");
-                    break;
-                } else {
-                    isLeader = false;
-                }
-            }
-        }
-    }
-
 
     private void initializeAcceptorAddresses() {
         this.acceptorAddresses = new ArrayList<>();
@@ -99,33 +68,23 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
 
     /**
      * This method is called by the client to pass into the client request
-     * @param input the client request
      * @return a String, which is the response from the server
      * @throws IOException
      * @throws NotBoundException
      */
     @Override
-    public String operate(String input) throws IOException, NotBoundException, InterruptedException {
-        return this.initiatePaxos(input);
+    public void start() throws IOException, NotBoundException, InterruptedException, JMSException {
+        try {
+            JMSReceiver jmsReceiver = new JMSReceiver();
+            jmsReceiver.startReceiving();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
-    public boolean isHealthy() {
-        return true;
-    }
-
-    private boolean rmiIsHealth(String portNumber) {
-        try
-        {
-            ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + portNumber + "/ProxyServer");
-            return c.isHealthy();
-        }
-        catch (Exception e)
-        {
-            logger.warning("Proxy server error: " + e.getMessage());
-            return false;
-        }
-    }
+    public boolean isHealthy() { return true; }
 
     /**
      * this is the "proposer" role, which is a private method that is not accessible to the clients
@@ -248,7 +207,8 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception happened:" + e);
         }
 
-
+        //TODO: ask learners to store changes in DB
+//        Database.storeTXT();
         //TODO: send messages to clients that they should update their files
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
 
