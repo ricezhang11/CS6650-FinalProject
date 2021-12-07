@@ -24,3 +24,5 @@ hs_err_pid*
 
 /.env
 
+.idea
+.DS_Store

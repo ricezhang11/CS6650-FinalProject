@@ -11,6 +11,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -22,6 +23,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
     List<String> acceptorAddresses;
     List<String> learnerAddresses;
     Logger logger = Logger.getLogger("ProxyServerImpl");
+    boolean isLeader;
 
     public ProxyServerImpl(String port) throws java.rmi.RemoteException {
         super();
@@ -29,6 +31,36 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         this.initializeAcceptorAddresses();
         this.initializeLearnerAddresses();
     }
+    public List<String> getAllServerPort() {
+        List<String> listOfServerPort = new ArrayList<>();
+        for(String s : acceptorAddresses) {
+            int index1 = s.indexOf(":", 4);
+            int index2 = s.indexOf("/", index1);
+            String serverPort = s.substring(index1 + 1, index2);
+            listOfServerPort.add(serverPort);
+        }
+        return listOfServerPort;
+    }
+
+
+    public void electLeader() throws RemoteException {
+        List<String> listOfServerPort = getAllServerPort();
+        Collections.sort(listOfServerPort);
+        for(int i = listOfServerPort.size() - 1; i > 0; i--) {
+
+            if(rmiIsHealth(listOfServerPort.get(i))) {
+                if(listOfServerPort.get(i).equals(port)) {
+                    isLeader = true;
+                    logger.info(new Timestamp(System.currentTimeMillis()) + " Proposer with port number "
+                            + listOfServerPort.get(i) + " is elected as leader");
+                    break;
+                } else {
+                    isLeader = false;
+                }
+            }
+        }
+    }
+
 
     private void initializeAcceptorAddresses() {
         this.acceptorAddresses = new ArrayList<>();
@@ -72,6 +104,24 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
     @Override
     public String operate(String input) throws IOException, NotBoundException, InterruptedException {
         return this.initiatePaxos(input);
+    }
+
+    @Override
+    public boolean isHealthy() {
+        return true;
+    }
+
+    private boolean rmiIsHealth(String portNumber) {
+        try
+        {
+            ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + portNumber + "/ProxyServer");
+            return c.isHealthy();
+        }
+        catch (Exception e)
+        {
+            logger.warning("Proxy server error: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
