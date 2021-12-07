@@ -9,8 +9,8 @@
         <module name="CS6650-FinalProject" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="14">
-      <module name="CS6650-FinalProject" target="14" />
+    <bytecodeTargetLevel target="8">
+      <module name="CS6650-FinalProject" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

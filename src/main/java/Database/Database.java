@@ -34,7 +34,7 @@ public class Database {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
         }
 
-        storeTXT("defaultDatabase", "testCollection", "/Users/yvetteli/Desktop/ReadMe.txt");
+        storeTXT("defaultDatabase", "testCollection", "/Users/april/Desktop/maven.txt");
     }
 
     public static void storeTXT(String MongoDBName, String MongoDBCollection, String filePath) throws Exception {
