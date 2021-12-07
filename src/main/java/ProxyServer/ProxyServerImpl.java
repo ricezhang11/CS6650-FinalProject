@@ -1,9 +1,11 @@
 package ProxyServer;
 
 import Acceptor.*;
+import JMSReceiver.JMSReceiver;
 import Learner.Learner;
 import Utility.*;
 
+import javax.jms.JMSException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -23,7 +25,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
     List<String> learnerAddresses;
     Logger logger = Logger.getLogger("ProxyServerImpl");
 
-    public ProxyServerImpl(String port) throws java.rmi.RemoteException {
+    public ProxyServerImpl(String port) throws java.rmi.RemoteException, JMSException {
         super();
         this.port = port;
         this.initializeAcceptorAddresses();
