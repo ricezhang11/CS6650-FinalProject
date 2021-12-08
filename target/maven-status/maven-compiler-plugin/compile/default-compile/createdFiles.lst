@@ -2,7 +2,6 @@ Learner/Store.class
 DataStoreServer.class
 Acceptor/AcceptorImpl.class
 DataStoreServer$Task.class
-Database.class
 JMSPublisher/JMSPublisher.class
 Acceptor/Acceptor.class
 ProxyServer/ProxyServerImpl.class

@@ -93,6 +93,7 @@ public class DataStoreClient {
         // continue to receive following requests until forced to stop
         while (true) {
             try {
+                System.out.println("hey i'm learning maven");
                 System.out.println("Please enter a valid operation below:");
                 System.out.println("----Valid operations include PUT (key value)/GET (key)/DELETE (key), e.g. PUT 2 3, GET 2, DELETE 2----");
                 // retrieve user input
