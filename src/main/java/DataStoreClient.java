@@ -68,35 +68,27 @@ public class DataStoreClient {
         Random random = new Random();
         String assignedServer = null;
         // send initial requests
-        for (String request: client.getInitialRequests()) {
-            try {
-                assignedServer = client.getServers().get(random.nextInt(client.getServers().size()));
-                logger.info(new Timestamp(System.currentTimeMillis()) + " Sending request to server port: " + assignedServer);
-                // access localhost at docker's host machine through host.docker.internal
-//                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
-//                ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
-                // TODO: send message to a message queue
-                client.jmsPublisher.sendMessage(request);
-//                String result = c.operate(request);
-//                Note that to avoid these initial requests to overlap with each other (stuck in the same Paxos round) as much as possible,
-//                thread will sleep for 15 second before sending out the next request to account for the acceptor failures.
-//                Therefore, the initial requests take some time to finish
-//                Thread.sleep(15000);
-//                logger.info(new Timestamp(System.currentTimeMillis()) + result );
-            }
-//            catch (MalformedURLException murle) {
-//                logger.warning(new Timestamp(System.currentTimeMillis()) + " MalformedURLException " + murle);
+//        for (String request: client.getInitialRequests()) {
+//            try {
+//                assignedServer = client.getServers().get(random.nextInt(client.getServers().size()));
+//                logger.info(new Timestamp(System.currentTimeMillis()) + " Sending request to server port: " + assignedServer);
+//                // access localhost at docker's host machine through host.docker.internal
+////                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
+////                ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
+//                // TODO: send message to a message queue
+//                client.jmsPublisher.sendMessage(request);
+//                logger.info(new Timestamp(System.currentTimeMillis()) + " Request sent successfully");
+////                String result = c.operate(request);
+////                Note that to avoid these initial requests to overlap with each other (stuck in the same Paxos round) as much as possible,
+////                thread will sleep for 15 second before sending out the next request to account for the acceptor failures.
+////                Therefore, the initial requests take some time to finish
+////                Thread.sleep(15000);
+////                logger.info(new Timestamp(System.currentTimeMillis()) + result );
 //            }
-//            catch (RemoteException re) {
-//                logger.warning(new Timestamp(System.currentTimeMillis()) + " RemoteException " + re);
+//            catch (Exception e) {
+//                logger.warning(new Timestamp(System.currentTimeMillis()) + " UnexpectedException " + e);
 //            }
-//            catch (NotBoundException nbe) {
-//                logger.warning(new Timestamp(System.currentTimeMillis()) + " NotBoundException " + nbe);
-//            }
-            catch (Exception e) {
-                logger.warning(new Timestamp(System.currentTimeMillis()) + " UnexpectedException " + e);
-            }
-        }
+//        }
 
         // continue to receive following requests until forced to stop
         while (true) {
@@ -112,20 +104,10 @@ public class DataStoreClient {
                 ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
 //                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
                 //TODO: send message to message queue
+                client.jmsPublisher.sendMessage(userInput);
+                logger.info(new Timestamp(System.currentTimeMillis()) + " Request sent successfully");
 //                String response = c.operate(userInput);
 //                System.out.println( response );
-            }
-            catch (MalformedURLException murle) {
-                logger.warning(new Timestamp(System.currentTimeMillis()) + " MalformedURLException " + murle);
-            }
-            catch (RemoteException re) {
-                logger.warning(new Timestamp(System.currentTimeMillis()) + " RemoteException " + re);
-            }
-            catch (NotBoundException nbe) {
-                logger.warning(new Timestamp(System.currentTimeMillis()) + " NotBoundException " + nbe);
-            }
-            catch (IOException ioe) {
-                logger.warning(new Timestamp(System.currentTimeMillis()) + " IOException " + ioe);
             }
             catch (Exception e) {
                 logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception " + e);

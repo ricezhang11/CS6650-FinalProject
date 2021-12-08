@@ -7,15 +7,17 @@ import Learner.Learner;
 import Utility.*;
 
 import javax.jms.JMSException;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -77,9 +79,27 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         try {
             JMSReceiver jmsReceiver = new JMSReceiver();
             jmsReceiver.startReceiving();
+            //TODO: read from the file and initiate paxos one by one
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
+        }
+
+        File clientRequestFile = new File(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt");
+        while(true) {
+            Scanner fileReader = new Scanner(clientRequestFile);
+            String data = null;
+            if (fileReader.hasNext()) {
+                data = fileReader.nextLine();
+                System.out.println(data);
+                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
+                List<String> inputList = Arrays.asList(data.split(";"));
+                for (String input: inputList) {
+                    String result = this.initiatePaxos(input);
+                    System.out.println(result);
+                }
+            }
+            fileReader.close();
         }
     }
 

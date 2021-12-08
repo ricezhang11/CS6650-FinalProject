@@ -56,17 +56,7 @@ public class JMSReceiver {
                         buffer.flip();
                         System.out.println("about to write!");
                         AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/" + "ClientRequest.txt"), StandardOpenOption.WRITE);
-                        Future<Integer> future = asyncChannel.write(buffer, asyncChannel.size());
-
-                        for (;;) {
-                            if (future.isDone()) {
-                                // when task is finished, return the response object
-                                System.out.println("writing finished");
-                                break;
-                            }
-                        }
-
-
+                        asyncChannel.write(buffer, asyncChannel.size());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
