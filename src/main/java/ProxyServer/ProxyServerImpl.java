@@ -1,7 +1,6 @@
 package ProxyServer;
 
 import Acceptor.*;
-//import Database.Database;
 import JMSReceiver.JMSReceiver;
 import Learner.Learner;
 import Utility.*;
@@ -227,10 +226,11 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception happened:" + e);
         }
 
-        //TODO: ask learners to store changes in DB
-//        Database.storeTXT();
-        //TODO: send messages to clients that they should update their files
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
+
+        //TODO: ask learners to store changes in DB
+        //TODO: send messages to clients that they should update their files
+
 
         return response.serialize();
     }
