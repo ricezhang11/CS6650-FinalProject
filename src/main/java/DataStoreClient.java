@@ -147,11 +147,7 @@ public class DataStoreClient {
                 if (userInput.toLowerCase().equals("quit")) {
                     break;
                 }
-                // randomly select a server
-                assignedServer = client.getServers().get(random.nextInt(client.getServers().size()));
-                ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
-//                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
-                // send message to message queue
+                // send message to message queue, not to any server
                 client.jmsPublisher.sendMessage(userInput);
                 logger.info(new Timestamp(System.currentTimeMillis()) + " Request sent successfully");
             } catch (Exception e) {
