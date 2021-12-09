@@ -105,13 +105,14 @@ public class DataStoreClient {
         String userInput = "";
 
         // continue to receive following requests until user enters "quit"
+        // to gracefully stop the client (clean up files etc.) use "quit" to kill client instead of Ctrl + C.
         while (true) {
             try {
                 System.out.println("Please enter a valid operation below:");
                 System.out.println("----Valid operations include PUT (key value)/GET (key)/DELETE (key), e.g. PUT 2 3, GET 2, DELETE 2----");
                 // retrieve user input
                 userInput = input.readLine();
-
+                //
                 if (userInput.toLowerCase().equals("quit")) {
                     break;
                 }
