@@ -1,6 +1,7 @@
 package ProxyServer;
 
 import Acceptor.*;
+import JMSPublisher.JMSPublisher;
 import JMSReceiver.JMSReceiver;
 import Learner.Learner;
 import Utility.*;
@@ -76,15 +77,16 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
     @Override
     public void start() throws IOException, NotBoundException, InterruptedException, JMSException {
         try {
-            JMSReceiver jmsReceiver = new JMSReceiver();
+            // receive messages from cs6650 client request queue
+            JMSReceiver jmsReceiver = new JMSReceiver("cs6650-client request queue", "ClientRequest.txt");
             jmsReceiver.startReceiving();
-            //TODO: read from the file and initiate paxos one by one
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
 
         File clientRequestFile = new File(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt");
+        // non-stop check whether there are new messages (requests) coming in. If so, print out the message (request) and initiate Paxos
         while(true) {
             Scanner fileReader = new Scanner(clientRequestFile);
             String data = null;
@@ -113,7 +115,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
      * @throws NotBoundException
      * @throws MalformedURLException
      */
-    private String initiatePaxos(String input) throws IOException, NotBoundException, InterruptedException {
+    private String initiatePaxos(String input) throws IOException, NotBoundException, InterruptedException, JMSException {
         // use timestamp in the milliseconds as the sequence number. This way, the sequence number is ever increasing and each proposer's timestamp should be unique
         int quorum = (this.acceptorAddresses.size() / 2) + 1;
         // this is to count how many votes the proposer got in the prepare phase
@@ -229,8 +231,21 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
 
         //TODO: ask learners to store changes in DB
+
         //TODO: send messages to clients that they should update their files
-        
+        // 1. open ClientQueueRegistry.txt file
+        // 2. initialize JMSPublisher to publish the committed value to these queue
+        File clientQueueRegistryFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt");
+        Scanner fileReader = new Scanner(clientQueueRegistryFile);
+        while (fileReader.hasNext()) {
+            String queue = fileReader.nextLine();
+            System.out.println("------------------------------");
+            System.out.println(queue);
+            JMSPublisher jmsPublisher = new JMSPublisher(queue);
+            jmsPublisher.sendMessage(acceptedValue + " Shared file has been updated! Automatically running GET to update local files....");
+            jmsPublisher.closeConnection();
+        }
+        fileReader.close();
 
         return response.serialize();
     }

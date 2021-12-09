@@ -10,12 +10,13 @@ public class JMSPublisher {
     Connection con;
     Session session;
     //TODO: define a publisher, initiate connection etc.
-    public JMSPublisher() throws JMSException {
+    public JMSPublisher(String queueName) throws JMSException {
         connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
         try {
             con = connectionFactory.createConnection();
             session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            queue = session.createQueue("message queue");
+            //connect to queue
+            queue = session.createQueue(queueName);
             messageProducer = session.createProducer(queue);
         } catch(Exception e) {
             e.printStackTrace();
