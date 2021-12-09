@@ -22,6 +22,11 @@ public class DataStoreClient {
     private final String clientQueueName = "cs6650-server response queue" + clientCreationTimestamp;
     private final String serverResponseFileName = "ServerResponse" + clientCreationTimestamp + ".txt";
 
+    /**
+     * initialize message publisher and receiver, register client message queue with JMS
+     * @throws JMSException
+     * @throws IOException
+     */
     public DataStoreClient() throws JMSException, IOException {
         this.servers = new ArrayList<>();
         // client publishes messages to "cs6650-client request queue"
@@ -40,10 +45,19 @@ public class DataStoreClient {
         this.servers.add("5040");
     }
 
+    /**
+     * tell client's MQ to start receiving server messages
+     * @throws JMSException
+     */
     private void startReceivingServerResponse() throws JMSException {
         this.jmsReceiver.startReceiving();
     }
 
+    /**
+     * register client's MQ so that server can send messages to it
+     * @param queueName
+     * @throws IOException
+     */
     private void registerClientQueueName(String queueName) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         // write each client queue in a new line
@@ -54,6 +68,9 @@ public class DataStoreClient {
         asyncChannel.write(buffer, asyncChannel.size());
     }
 
+    /**
+     * clean up client files when client stops
+     */
     private void cleanUpFile() {
         File file = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
         if (file.delete()) {
@@ -63,6 +80,10 @@ public class DataStoreClient {
         }
     }
 
+    /**
+     * deregister client's MQ when client stops
+     * @throws IOException
+     */
     private void deregisterQueue() throws IOException {
         File inputFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt");
         File tempFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistryTemp.txt");
@@ -84,6 +105,10 @@ public class DataStoreClient {
         tempFile.renameTo(inputFile);
     }
 
+    /**
+     * clean up publisher and receiver connection
+     * @throws JMSException
+     */
     private void closeConnections() throws JMSException {
         this.jmsReceiver.closeConnection();
         this.jmsPublisher.closeConnection();
@@ -91,6 +116,12 @@ public class DataStoreClient {
 
     public ArrayList<String> getServers () { return this.servers; }
 
+    /**
+     * main method to send and receive messages to server
+     * @param args
+     * @throws JMSException
+     * @throws IOException
+     */
     public static void main(String[] args) throws JMSException, IOException {
         Logger logger = Logger.getLogger("DataStoreClient");
         logger.info(new Timestamp(System.currentTimeMillis()) + " Client is up and running!");

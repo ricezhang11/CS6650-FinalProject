@@ -10,8 +10,6 @@ import org.bson.Document;
 import com.mongodb.client.MongoCollection;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Database {
     public static MongoClient mongoClient;

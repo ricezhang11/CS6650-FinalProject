@@ -44,6 +44,7 @@ public class JMSReceiver {
                         System.out.println("----You have a new message----");
                         System.out.println(myMessage);
 
+                        // message queue can't return message directly. Writing to a local file so that server/client can consume the messages and do actions
                         File file = new File(System.getProperty("user.dir") + "/JMSReceiver/" + fileName);
                         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
                         writer.write(myMessage + ";");
