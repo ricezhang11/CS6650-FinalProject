@@ -114,6 +114,7 @@ public class DataStoreClient {
         this.jmsPublisher.closeConnection();
     }
 
+
     public ArrayList<String> getServers () { return this.servers; }
 
     /**
@@ -122,7 +123,7 @@ public class DataStoreClient {
      * @throws JMSException
      * @throws IOException
      */
-    public static void main(String[] args) throws JMSException, IOException {
+    public static void main(String[] args) throws JMSException, IOException, InterruptedException {
         Logger logger = Logger.getLogger("DataStoreClient");
         logger.info(new Timestamp(System.currentTimeMillis()) + " Client is up and running!");
         logger.info(new Timestamp(System.currentTimeMillis()) + " Sending initial requests");
@@ -134,6 +135,10 @@ public class DataStoreClient {
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String userInput = "";
+
+        // start a separate worker thread to read the files
+        ReadWorker readWorker = new ReadWorker(client.serverResponseFileName);
+        readWorker.start();
 
         // continue to receive following requests until user enters "quit"
         // to gracefully stop the client (clean up files etc.) use "quit" to kill client instead of Ctrl + C.
@@ -147,40 +152,56 @@ public class DataStoreClient {
                 if (userInput.toLowerCase().equals("quit")) {
                     break;
                 }
-
-
                 // Create a request based on user input.
                 Request currRequest = Request.createRequest(userInput);
-
-                // randomly select a server
-                assignedServer = client.getServers().get(random.nextInt(client.getServers().size()));
-                ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
-//                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
 
                 // send message to message queue
                 client.jmsPublisher.sendMessage(currRequest.toString());
                 logger.info(new Timestamp(System.currentTimeMillis()) + " Request sent successfully");
 
-                // retrieve response from message queue
-                File responseFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + client.serverResponseFileName);
-                // non-stop check whether there are new messages (responses) coming in. If so, print out the message (responses)
-                while(true) {
-                    Scanner fileReader = new Scanner(responseFile);
-                    String output = null;
-                    if (fileReader.hasNext()) {
-                        output = fileReader.nextLine();
-                        System.out.println("The response received: " + output);
-                        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/" + client.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
-                    }
-                    fileReader.close();
-                }
             } catch (Exception e) {
                 logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception " + e);
             }
         }
-        // clean up file and deregister queue when stopping the client
+        // clean up thread, file and deregister queue when stopping the client
+        // TODO: thread clean up is not working correctly at this point
+        readWorker.interrupt();
         client.closeConnections();
         client.cleanUpFile();
         client.deregisterQueue();
+    }
+}
+
+class ReadWorker extends Thread {
+    String serverResponseFileName;
+    public ReadWorker(String serverResponseFileName) {
+        this.serverResponseFileName = serverResponseFileName;
+    }
+
+    public void run(){
+        // TODO: delete this line after done testing!!!!
+        System.out.println("MyThread running");
+        // retrieve response from message queue
+        File responseFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
+        // non-stop check whether there are new messages (responses) coming in. If so, print out the message (responses)
+        while(true) {
+            Scanner fileReader = null;
+            try {
+                fileReader = new Scanner(responseFile);
+            } catch (FileNotFoundException e) {
+                break;
+            }
+            String output = null;
+            if (fileReader.hasNext()) {
+                output = fileReader.nextLine();
+                System.out.println("The response received: " + output);
+                try {
+                    AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
+                } catch (IOException e) {
+                    break;
+                }
+            }
+            fileReader.close();
+        }
     }
 }
