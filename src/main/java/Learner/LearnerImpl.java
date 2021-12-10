@@ -101,8 +101,7 @@ class Process implements Runnable {
         Logger logger = Logger.getLogger("DataStoreImpl");
         Request.Operation operation = request.getOperation();
         String filename = request.getFilename();
-        // perform UPLOAD operation
-        if (operation.equals(Request.Operation.UPDATE)) {
+        if (operation.equals(Request.Operation.UPLOAD)) {
             // Upload to db
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
         } else if (operation.equals(Request.Operation.UPDATE)) {
