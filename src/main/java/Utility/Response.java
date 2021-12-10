@@ -3,50 +3,48 @@ package Utility;
 import java.io.Serializable;
 
 /**
- * define a Response class to define the format of the responses returned by server
+ * This class is used to serialize/deserialize the responses.
  */
 public class Response implements Serializable {
-    String responseCode;
-    String operation;
-    String message;
-    String key;
-    String value;
-
-    public Response() { }
-
-    public Response(String responseCode, String operation, String message) {
-        this.responseCode = responseCode;
-        this.operation = operation;
-        this.message = message;
+    public enum Status {
+        SUCCEED,
+        FAILED
     }
 
-    public Response(String responseCode, String operation, String message, String key) {
-        this.responseCode = responseCode;
-        this.operation = operation;
-        this.message = message;
-        this.key = key;
+    private String responseCode;
+    private String operation;
+    private Status status;
+    private String filename;
+
+    public String getResponseCode() {
+        return responseCode;
+    }
+    public String getOperation() {
+        return operation;
+    }
+    public Status getStatus() {
+        return status;
+    }
+    public String getFilename() {
+        return filename;
     }
 
-    public Response(String responseCode, String operation, String message, String key, String value) {
+    public Response(String responseCode, String operation, Status status, String filename) {
         this.responseCode = responseCode;
         this.operation = operation;
-        this.message = message;
-        this.key = key;
-        this.value = value;
+        this.status = status;
+        this.filename = filename;
     }
 
     /**
-     * serialize response to string to return to the client
-     * @return a String (the serialized response)
+     * Serialize the response.
+     * Print out the response in a format of "code: , operation: , filename: , status: ".
+     *
+     * @return
      */
-    public String serialize() {
-        if (this.value != null && this.key != null) {
-            return "responseCode=>" + this.responseCode + " " + this.operation + " " + "key:" + this.key + " value:" + this.value + " " + this.message;
-        } else if (this.key != null) {
-            return "responseCode=>" + this.responseCode + " " + this.operation + " " + "key:" + this.key + " " + this.message;
-        } else {
-            return "responseCode=>" + this.responseCode + " " + this.operation + " " + this.message;
-        }
+    @Override
+    public String toString() {
+        return String.format("Code: %s, + Operation: %s, + Filename: %s, + Status: %s.", responseCode, operation, filename, status);
     }
 }
 

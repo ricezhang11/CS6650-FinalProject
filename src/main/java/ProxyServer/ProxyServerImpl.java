@@ -216,7 +216,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             response = l.commit(acceptedValue);
         }
 
-        logger.info(new Timestamp(System.currentTimeMillis()) + " Response from the learner is " + response.serialize());
+        logger.info(new Timestamp(System.currentTimeMillis()) + " Response from the learner is " + response.toString());
 
         try {
             // reset the acceptors and let them know this round of Paxos is done
@@ -247,6 +247,6 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         }
         fileReader.close();
 
-        return response.serialize();
+        return response.toString();
     }
 }

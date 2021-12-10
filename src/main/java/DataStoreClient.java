@@ -1,6 +1,7 @@
 import JMSPublisher.JMSPublisher;
 import JMSReceiver.JMSReceiver;
 import ProxyServer.ProxyServer;
+import Utility.Request;
 
 import javax.jms.JMSException;
 import java.io.*;
@@ -10,8 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.rmi.Naming;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class DataStoreClient {
@@ -132,7 +132,7 @@ public class DataStoreClient {
         // client will start to listen to server's messages
         client.startReceivingServerResponse();
 
-        DataInputStream input = new DataInputStream(System.in);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String userInput = "";
 
         // continue to receive following requests until user enters "quit"
@@ -140,20 +140,39 @@ public class DataStoreClient {
         while (true) {
             try {
                 System.out.println("Please enter a valid operation below:");
-                System.out.println("----Valid operations include PUT (key value)/GET (key)/DELETE (key), e.g. PUT 2 3, GET 2, DELETE 2----");
+                System.out.println("----Valid operations include UPLOAD filename|DOWNLOAD filename|UPDATE filename|DELETE filename----");
                 // retrieve user input
-                userInput = input.readLine();
-                //
+                userInput = reader.readLine();
+
                 if (userInput.toLowerCase().equals("quit")) {
                     break;
                 }
+
+                // Create a request based on user input.
+                Request currRequest = Request.createRequest(userInput);
+
                 // randomly select a server
                 assignedServer = client.getServers().get(random.nextInt(client.getServers().size()));
                 ProxyServer c = (ProxyServer) Naming.lookup("rmi://localhost:" + assignedServer + "/ProxyServer");
 //                ProxyServer c = (ProxyServer) Naming.lookup("rmi://host.docker.internal:" + assignedServer + "/ProxyServer");
+
                 // send message to message queue
-                client.jmsPublisher.sendMessage(userInput);
+                client.jmsPublisher.sendMessage(currRequest.toString());
                 logger.info(new Timestamp(System.currentTimeMillis()) + " Request sent successfully");
+
+                // retrieve response from message queue
+                File responseFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + client.serverResponseFileName);
+                // non-stop check whether there are new messages (responses) coming in. If so, print out the message (responses)
+                while(true) {
+                    Scanner fileReader = new Scanner(responseFile);
+                    String output = null;
+                    if (fileReader.hasNext()) {
+                        output = fileReader.nextLine();
+                        System.out.println("The response received: " + output);
+                        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/" + client.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
+                    }
+                    fileReader.close();
+                }
             } catch (Exception e) {
                 logger.warning(new Timestamp(System.currentTimeMillis()) + " Exception " + e);
             }
