@@ -1,20 +1,17 @@
 package Learner;
 
-import Utility.*;
+import Utility.Request;
+import Utility.Response;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 /**
- * The learner role, reused previous project code; this has the data store and all the operation logic that
- * comes with it, including PUT, GET, DELETE
+ * The learner has the data store and all the operation logic.
  */
 public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements Learner {
     String port;
@@ -30,14 +27,15 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
     }
 
     /**
-     * multithreaded learner for committing the operations
-     * @param operation the consensus result
+     * Multithreaded learner for committing the operations.
+     *
+     * @param request the consensus result
      * @return a Response object that contains the result of the operation
      */
     @Override
-    public Response commit(String operation) {
+    public Response commit(Request request) {
         // send initial requests
-        Process myProcess = new Process(this.store, operation);
+        Process myProcess = new Process(store, request);
         Future future;
         // submit a task to the thread pool and this will return a Future object
         future = this.pool.submit(myProcess);
@@ -45,8 +43,8 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
         for (;;) {
             if (future.isDone()) {
                 // when task is finished, return the response object
-                logger.info(operation);
-                logger.info(myProcess.getResponse().serialize());
+                logger.info(request.getOperation().toString());
+                logger.info(myProcess.getResponse().toString());
                 return myProcess.getResponse();
             }
         }
@@ -85,73 +83,39 @@ class Store {
  */
 class Process implements Runnable {
     Store store;
-    String input;
-    // store the response as a class variable, so that we can return the responses to the client
+    Request request;
     Response response;
 
-    public Process (Store store, String str) {
+    public Process (Store store, Request request) {
         this.store = store;
-        this.input = str;
+        this.request = request;
         this.response = null;
     }
 
     public Response getResponse() {
-        return this.response;
-    }
-
-    // check the validity of the input
-    private boolean checkValidity(List<String> inputList) {
-        List<String> validOperations = new ArrayList<>();
-        validOperations.add("PUT");
-        validOperations.add("GET");
-        validOperations.add("DELETE");
-
-        if (inputList.size() == 0 || !validOperations.contains(inputList.get(0))) {
-            return false;
-        } else if (inputList.get(0).equals("PUT") && inputList.size() == 3) {
-            return true;
-        } else if (inputList.get(0).equals("GET") && inputList.size() == 2) {
-            return true;
-        } else return inputList.get(0).equals("DELETE") && inputList.size() == 2;
+        return response;
     }
 
     // this method will perform the actual operations
     public void run() {
-        List<String> inputList = Arrays.asList(this.input.split(" "));
         Logger logger = Logger.getLogger("DataStoreImpl");
-        // first it checks the validity of the input
-        if (this.checkValidity(inputList)) {
-            String operation = inputList.get(0);
-            String key = inputList.get(1);
-            // perform PUT operation
-            if (operation.equals("PUT")) {
-                String value = inputList.get(2);
-                this.store.put(key, value);
-                this.response = new Response("200", operation, "success", key, this.store.get(key));
-            } else {
-                // check if the key exists
-                if (!this.store.storage.containsKey(key)) {
-                    logger.warning(new Timestamp(System.currentTimeMillis()) + " " + " client input contains invalid key; client input: " + this.input);
-                    this.response = new Response("400", operation, "not_a_valid_key", key);
-                } else {
-                    // perform GET operation
-                    if (operation.equals("GET")) {
-                        this.response = new Response("200", operation, "success", key, this.store.get(key));
-                        // perform DELETE operation
-                    } else {
-                        this.store.delete(key);
-                        this.response = new Response("200", operation, "success", key);
-                    }
-                }
-            }
-            // take care of invalid operations
+        Request.Operation operation = request.getOperation();
+        String filename = request.getFilename();
+        // perform UPLOAD operation
+        if (operation.equals(Request.Operation.UPDATE)) {
+            // Upload to db
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
+        } else if (operation.equals(Request.Operation.UPDATE)) {
+            // Update on db
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
+        } else if (operation.equals(Request.Operation.DELETE)) {
+            // Delete on db
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
+        } else if (operation.equals(Request.Operation.DOWNLOAD)) {
+            // DOWNLOAD on db
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
         } else {
-            String operation = "NULL";
-            if (inputList.size() >= 1) {
-                operation = inputList.get(0);
-            }
-            logger.warning(new Timestamp(System.currentTimeMillis()) + " " + " unknown operation or malformed input; client input: " + this.input);
-            this.response = new Response("400", operation, "Unknown_operation_or_malformed_input");
+            this.response = new Response("400", operation.toString(), Response.Status.FAILED, filename);
         }
     }
 }
