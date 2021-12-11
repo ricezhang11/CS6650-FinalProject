@@ -18,7 +18,7 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
     String port;
     ExecutorService pool;
     Logger logger = Logger.getLogger("LearnerImpl");
-    Database db;
+//    Database db;
 
     public LearnerImpl(String port) throws java.rmi.RemoteException {
         super();
@@ -36,7 +36,9 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
     @Override
     public Response commit(Request request) {
         // send initial requests
-        Process myProcess = new Process(request, this.db);
+        Process myProcess = new Process(request
+//                this.db
+        );
         Future future;
         // submit a task to the thread pool and this will return a Future object
         future = this.pool.submit(myProcess);
@@ -64,7 +66,9 @@ class Process implements Runnable {
 //    TODO: add newStr for updating the db
 //    String newStr;
 
-    public Process (Request request, Database db) {
+    public Process (Request request
+//                    Database db
+    ) {
         this.request = request;
         this.response = null;
         this.db = db;
@@ -92,18 +96,19 @@ class Process implements Runnable {
                 fos.write(request.getData());
             }
             // Upload to db
-//            String content = db.upload(filepath);
-//            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "upload");
+            String content = db.upload(filepath);
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+//            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "upload");
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully uploaded " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.UPDATE)) {
             // Update on db
-            String content = db.update(filepath, new String(request.getData()));
+//            String content = db.update(filepath, new String(request.getData()));
+            String content = db.update(filepath, "test update");
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully updated " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DELETE)) {
             // Delete on db
-//            db.delete(filepath);
+            db.delete(filepath);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully deleted " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DOWNLOAD)) {

@@ -22,6 +22,7 @@ public class DataStoreClient {
     private final String clientCreationTimestamp = new Timestamp(System.currentTimeMillis()).toString();
     private final String clientQueueName = "cs6650-server response queue" + clientCreationTimestamp;
     private final String serverResponseFileName = "ServerResponse" + clientCreationTimestamp + ".txt";
+    private final String clientFolderName = "Client" + clientCreationTimestamp;
 
     /**
      * initialize message publisher and receiver, register client message queue with JMS
@@ -35,6 +36,7 @@ public class DataStoreClient {
         this.jmsReceiver = new JMSReceiver(clientQueueName, serverResponseFileName);
         // register client queue names so that server can retrieve them
         this.registerClientQueueName(this.clientQueueName);
+        this.createClientFolder();
         this.populateServers();
     }
 
@@ -46,6 +48,13 @@ public class DataStoreClient {
         this.servers.add("5040");
     }
 
+    private void createClientFolder() {
+        if (new File(System.getProperty("user.dir") + "/" + this.clientFolderName).mkdir()) {
+            System.out.println("created folder");
+        } else {
+            System.out.println("folder already exists");
+        }
+    }
     /**
      * tell client's MQ to start receiving server messages
      * @throws JMSException
@@ -65,7 +74,9 @@ public class DataStoreClient {
         String toWrite = queueName + System.lineSeparator();
         buffer.put(toWrite.getBytes());
         buffer.flip();
-        AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java/Utility/ClientQueueRegistry.txt"), StandardOpenOption.WRITE);
+//        AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java/Utility/ClientQueueRegistry.txt"), StandardOpenOption.WRITE);
+        AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt"), StandardOpenOption.WRITE);
+
         asyncChannel.write(buffer, asyncChannel.size());
     }
 
@@ -73,7 +84,9 @@ public class DataStoreClient {
      * clean up client files when client stops
      */
     private void cleanUpFile() {
-        File file = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
+//        File file = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
+        File file = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
+
         if (file.delete()) {
             System.out.println("File deleted");
         } else {
@@ -81,13 +94,26 @@ public class DataStoreClient {
         }
     }
 
+    private void cleanUpFolder(File f) {
+        File[] contents = f.listFiles();
+        if (contents != null) {
+            for (File content : contents) {
+                cleanUpFolder(content);
+            }
+        }
+        f.delete();
+    }
+
     /**
      * deregister client's MQ when client stops
      * @throws IOException
      */
     private void deregisterQueue() throws IOException {
-        File inputFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistry.txt");
-        File tempFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistryTemp.txt");
+//        File inputFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistry.txt");
+//        File tempFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistryTemp.txt");
+
+        File inputFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt");
+        File tempFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistryTemp.txt");
 
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
@@ -169,6 +195,7 @@ public class DataStoreClient {
         readWorker.interrupt();
         client.closeConnections();
         client.cleanUpFile();
+        client.cleanUpFolder(new File(System.getProperty("user.dir") + "/" + client.clientFolderName));
         client.deregisterQueue();
     }
 }
@@ -183,7 +210,9 @@ class ReadWorker extends Thread {
         // TODO: delete this line after done testing!!!!
         System.out.println("MyThread running");
         // retrieve response from message queue
-        File responseFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
+//        File responseFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
+        File responseFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
+
         // non-stop check whether there are new messages (responses) coming in. If so, print out the message (responses)
         while(true) {
             Scanner fileReader = null;
@@ -196,7 +225,9 @@ class ReadWorker extends Thread {
             if (fileReader.hasNext()) {
                 output = fileReader.nextLine();
                 try {
-                    AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
+//                    AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
+                    AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
+
                 } catch (IOException e) {
                     break;
                 }
@@ -209,8 +240,14 @@ class ReadWorker extends Thread {
 
             for (String response : responses) {
                 Response newResponse = Response.createResponse(response);
+                if (newResponse.getStatus() == Response.Status.SUCCEED) {
+                    if (newResponse.getOperation().equals(Request.Operation.UPLOAD.toString())) {
+                    }
+                }
                 System.out.println("The response received: " + newResponse.toString());
             }
+
+
         }
     }
 }

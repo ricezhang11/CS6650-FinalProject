@@ -104,7 +104,8 @@ public class Request implements Serializable {
 
         // The input should be in a format of "operation, filename".
         String[] parts = input.trim().split(",");
-        if (parts.length != 2) {
+        if (parts.length != 2 && parts.length != 3) {
+            System.out.println(parts);
             throw new IllegalArgumentException("Malformed request with " + parts.length + " parts.");
         }
 
@@ -148,9 +149,11 @@ public class Request implements Serializable {
      * @throws IOException
      */
     private static byte[] loadFile(String filename) throws IOException {
-        File file = new File(System.getProperty("user.dir") + "/src/main/java" + filename);
+//        File file = new File(System.getProperty("user.dir") + "/src/main/java" + filename);
+        File file = new File(System.getProperty("user.dir") + "/" + filename);
+
         // Assuming files are small and can fit in memory
-        byte[]  data= new byte[(int) (file.length())];
+        byte[] data= new byte[(int) (file.length())];
 
         FileInputStream fileInputStream = null;
         try {

@@ -51,8 +51,11 @@ public class AcceptorImpl extends java.rmi.server.UnicastRemoteObject implements
      */
     private void createFiles() throws IOException {
         // change to relative path so that TA can run this
-        File highestSequenceNumberPromisedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1);
-        File proposalAcceptedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2);
+//        File highestSequenceNumberPromisedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1);
+//        File proposalAcceptedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2);
+
+        File highestSequenceNumberPromisedFile = new File(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_1);
+        File proposalAcceptedFile = new File(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_2);
 
         if (highestSequenceNumberPromisedFile.createNewFile()) {
             logger.info(new Timestamp(System.currentTimeMillis()) + " highestSequenceNumberPromisedFile successfully created at port " + this.port);
@@ -74,7 +77,10 @@ public class AcceptorImpl extends java.rmi.server.UnicastRemoteObject implements
      */
     private void readValuesFromFiles() throws FileNotFoundException {
         // read the highest sequence number seen by the acceptor
-        File highestSequenceNumberPromisedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1);
+//        File highestSequenceNumberPromisedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1);
+        File highestSequenceNumberPromisedFile = new File(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_1);
+
+
         Scanner fileReader = new Scanner(highestSequenceNumberPromisedFile);
         String data = null;
 
@@ -90,7 +96,10 @@ public class AcceptorImpl extends java.rmi.server.UnicastRemoteObject implements
             logger.info(new Timestamp(System.currentTimeMillis()) + " no sequence number seen yet at port " + this.port);
         }
 
-        File proposalAcceptedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2);
+//        File proposalAcceptedFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2);
+        File proposalAcceptedFile = new File(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_2);
+
+
         fileReader = new Scanner(proposalAcceptedFile);
         data = null;
 
@@ -136,7 +145,9 @@ public class AcceptorImpl extends java.rmi.server.UnicastRemoteObject implements
             buffer.put(toWrite.getBytes());
             buffer.flip();
 
-            AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1), StandardOpenOption.WRITE);
+//            AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1), StandardOpenOption.WRITE);
+            AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_1), StandardOpenOption.WRITE);
+
             Future<Integer> future = asyncChannel.write(buffer, 0);
             logger.info(new Timestamp(System.currentTimeMillis()) + " Prepare phase -- writing to file");
             // if no previously accepted proposal, this will just be 0 and "". In the proposer's logic, this will be ignored and the proposer will proceed with client request
@@ -167,7 +178,10 @@ public class AcceptorImpl extends java.rmi.server.UnicastRemoteObject implements
             buffer.put(toWrite.getBytes());
             buffer.flip();
 
-            AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2), StandardOpenOption.WRITE);
+//            AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2), StandardOpenOption.WRITE);
+            AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_2), StandardOpenOption.WRITE);
+
+
             asyncChannel.write(buffer, asyncChannel.size());
             logger.info(new Timestamp(System.currentTimeMillis()) + " Accept phase -- accepted proposal: " + toWrite + " and writing to file");
             return true;
@@ -187,7 +201,10 @@ public class AcceptorImpl extends java.rmi.server.UnicastRemoteObject implements
         this.acceptedValue = "";
         logger.info(new Timestamp(System.currentTimeMillis()) + " Reset --- values are reset and file is being emptied");
         // delete current round records
-        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1), StandardOpenOption.WRITE).truncate(0).close();
-        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2), StandardOpenOption.WRITE).truncate(0).close();
+//        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_1), StandardOpenOption.WRITE).truncate(0).close();
+//        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/Acceptor/" + this.fileName_2), StandardOpenOption.WRITE).truncate(0).close();
+        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_1), StandardOpenOption.WRITE).truncate(0).close();
+        AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/Acceptor/" + this.fileName_2), StandardOpenOption.WRITE).truncate(0).close();
+
     }
 }

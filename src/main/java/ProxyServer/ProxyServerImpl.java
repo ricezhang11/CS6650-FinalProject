@@ -75,7 +75,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
      * @throws NotBoundException
      */
     @Override
-    public void start() throws IOException, NotBoundException, InterruptedException, JMSException {
+    public void start() throws IOException, NotBoundException, InterruptedException, JMSException, RemoteException {
         try {
             // receive messages from cs6650 client request queue
             JMSReceiver jmsReceiver = new JMSReceiver("cs6650-client request queue", "ClientRequest.txt");
@@ -84,8 +84,12 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             e.printStackTrace();
             throw e;
         }
+        System.out.println("still alive!");
+//        File clientRequestFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt");
+        File clientRequestFile = new File(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt");
 
-        File clientRequestFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt");
+
+        System.out.println("still alive here!");
         // non-stop check whether there are new messages (requests) coming in. If so, print out the message (request) and initiate Paxos
         while(true) {
             Scanner fileReader = new Scanner(clientRequestFile);
@@ -93,7 +97,9 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             if (fileReader.hasNext()) {
                 data = fileReader.nextLine();
                 System.out.println(data);
-                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
+//                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
+                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
+
                 List<String> inputList = Arrays.asList(data.split(";"));
                 for (String input: inputList) {
                     String result = this.initiatePaxos(input);
@@ -235,7 +241,9 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         //TODO: send messages to clients that they should update their files
         // 1. open ClientQueueRegistry.txt file
         // 2. initialize JMSPublisher to publish the committed value to these queue
-        File clientQueueRegistryFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistry.txt");
+//        File clientQueueRegistryFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistry.txt");
+        File clientQueueRegistryFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt");
+
         Scanner fileReader = new Scanner(clientQueueRegistryFile);
         while (fileReader.hasNext()) {
             String queue = fileReader.nextLine();
