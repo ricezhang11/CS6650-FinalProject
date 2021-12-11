@@ -148,7 +148,7 @@ public class Request implements Serializable {
      * @throws IOException
      */
     private static byte[] loadFile(String filename) throws IOException {
-        File file = new File(System.getProperty("user.dir") + filename);
+        File file = new File(System.getProperty("user.dir") + "/src/main/java" + filename);
         // Assuming files are small and can fit in memory
         byte[]  data= new byte[(int) (file.length())];
 

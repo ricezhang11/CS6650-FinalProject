@@ -86,17 +86,19 @@ class Process implements Runnable {
         String filepath = "/Users/april/Desktop/" + filename;
         if (operation.equals(Request.Operation.UPLOAD)) {
             // Upload to db
-            String content = db.upload(filepath);
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+//            String content = db.upload(filepath);
+//            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "upload");
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully uploaded " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.UPDATE)) {
             // Update on db
-            String content = db.update(filepath);
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+//            String content = db.update(filepath);
+//            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "update");
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully updated " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DELETE)) {
             // Delete on db
-            db.delete(filepath);
+//            db.delete(filepath);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully deleted " + "\"" + filepath + "\"" );
         } else {

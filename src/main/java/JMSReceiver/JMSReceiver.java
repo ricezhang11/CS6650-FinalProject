@@ -18,8 +18,7 @@ public class JMSReceiver {
     Logger logger = Logger.getLogger("JMSReceiver");
 
     public JMSReceiver(String queueName, String fileName) throws JMSException, IOException {
-        File clientRequestFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + fileName);
-
+        File clientRequestFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + fileName);
         if (clientRequestFile.createNewFile()) {
             logger.info(new Timestamp(System.currentTimeMillis()) + " clientRequestFile successfully created");
         } else {
@@ -45,7 +44,7 @@ public class JMSReceiver {
                         System.out.println(myMessage);
 
                         // message queue can't return message directly. Writing to a local file so that server/client can consume the messages and do actions
-                        File file = new File(System.getProperty("user.dir") + "/JMSReceiver/" + fileName);
+                        File file = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + fileName);
                         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
                         writer.write(myMessage + ";");
                         writer.close();

@@ -2,6 +2,7 @@ import JMSPublisher.JMSPublisher;
 import JMSReceiver.JMSReceiver;
 import ProxyServer.ProxyServer;
 import Utility.Request;
+import Utility.Response;
 
 import javax.jms.JMSException;
 import java.io.*;
@@ -64,7 +65,7 @@ public class DataStoreClient {
         String toWrite = queueName + System.lineSeparator();
         buffer.put(toWrite.getBytes());
         buffer.flip();
-        AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt"), StandardOpenOption.WRITE);
+        AsynchronousFileChannel asyncChannel = AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java/Utility/ClientQueueRegistry.txt"), StandardOpenOption.WRITE);
         asyncChannel.write(buffer, asyncChannel.size());
     }
 
@@ -72,7 +73,7 @@ public class DataStoreClient {
      * clean up client files when client stops
      */
     private void cleanUpFile() {
-        File file = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
+        File file = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
         if (file.delete()) {
             System.out.println("File deleted");
         } else {
@@ -85,8 +86,8 @@ public class DataStoreClient {
      * @throws IOException
      */
     private void deregisterQueue() throws IOException {
-        File inputFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt");
-        File tempFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistryTemp.txt");
+        File inputFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistry.txt");
+        File tempFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistryTemp.txt");
 
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
@@ -145,7 +146,7 @@ public class DataStoreClient {
         while (true) {
             try {
                 System.out.println("Please enter a valid operation below:");
-                System.out.println("----Valid operations include UPLOAD filename|DOWNLOAD filename|UPDATE filename|DELETE filename----");
+                System.out.println("----VALID operations includes operation:UPLOAD filename:sample.txt|DOWNLOAD filename|UPDATE filename|DELETE filename----");
                 // retrieve user input
                 userInput = reader.readLine();
 
@@ -182,7 +183,7 @@ class ReadWorker extends Thread {
         // TODO: delete this line after done testing!!!!
         System.out.println("MyThread running");
         // retrieve response from message queue
-        File responseFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
+        File responseFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
         // non-stop check whether there are new messages (responses) coming in. If so, print out the message (responses)
         while(true) {
             Scanner fileReader = null;
@@ -194,14 +195,24 @@ class ReadWorker extends Thread {
             String output = null;
             if (fileReader.hasNext()) {
                 output = fileReader.nextLine();
-                System.out.println("The response received: " + output);
                 try {
-                    AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
+                    AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName), StandardOpenOption.WRITE).truncate(0).close();
                 } catch (IOException e) {
                     break;
                 }
             }
             fileReader.close();
+            List<String> responses = new ArrayList<>();
+            if (output != null) {
+                responses = Arrays.asList(output.split(";"));
+            }
+
+            for (String response : responses) {
+                Response newResponse = Response.createResponse(response);
+                System.out.println("The response received: " + newResponse.toString());
+            }
         }
     }
 }
+
+

@@ -85,7 +85,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             throw e;
         }
 
-        File clientRequestFile = new File(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt");
+        File clientRequestFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt");
         // non-stop check whether there are new messages (requests) coming in. If so, print out the message (request) and initiate Paxos
         while(true) {
             Scanner fileReader = new Scanner(clientRequestFile);
@@ -93,7 +93,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             if (fileReader.hasNext()) {
                 data = fileReader.nextLine();
                 System.out.println(data);
-                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
+                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
                 List<String> inputList = Arrays.asList(data.split(";"));
                 for (String input: inputList) {
                     String result = this.initiatePaxos(input);
@@ -235,14 +235,14 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         //TODO: send messages to clients that they should update their files
         // 1. open ClientQueueRegistry.txt file
         // 2. initialize JMSPublisher to publish the committed value to these queue
-        File clientQueueRegistryFile = new File(System.getProperty("user.dir") + "/Utility/ClientQueueRegistry.txt");
+        File clientQueueRegistryFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/Utility/ClientQueueRegistry.txt");
         Scanner fileReader = new Scanner(clientQueueRegistryFile);
         while (fileReader.hasNext()) {
             String queue = fileReader.nextLine();
             System.out.println("------------------------------");
             System.out.println(queue);
             JMSPublisher jmsPublisher = new JMSPublisher(queue);
-            jmsPublisher.sendMessage(acceptedValue + " Shared file has been updated! Automatically running GET to update local files....");
+            jmsPublisher.sendMessage(response.toString());
             jmsPublisher.closeConnection();
         }
         fileReader.close();
