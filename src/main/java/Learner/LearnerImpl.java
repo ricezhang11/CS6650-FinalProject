@@ -1,29 +1,29 @@
 package Learner;
 
+import Database.Database;
 import Utility.Request;
 import Utility.Response;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 /**
- * The learner has the data store and all the operation logic.
+ * The learner interacts with database.
  */
 public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements Learner {
     String port;
-    Store store;
     ExecutorService pool;
     Logger logger = Logger.getLogger("LearnerImpl");
+    Database db;
 
     public LearnerImpl(String port) throws java.rmi.RemoteException {
         super();
         this.port = port;
-        this.store = new Store();
         this.pool = Executors.newFixedThreadPool(5);
+        this.db = new Database("defaultDatabase", "myCollection");
     }
 
     /**
@@ -35,7 +35,7 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
     @Override
     public Response commit(Request request) {
         // send initial requests
-        Process myProcess = new Process(store, request);
+        Process myProcess = new Process(request, this.db);
         Future future;
         // submit a task to the thread pool and this will return a Future object
         future = this.pool.submit(myProcess);
@@ -52,69 +52,56 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
 }
 
 /**
- * This is the actual data store. The data is stored inside a hashmap. This class also defines
- * put, delete and get operations that can be performed on the hashmap.
- */
-class Store {
-    HashMap<String, String> storage;
-    public Store() {
-        this.storage = new HashMap<String, String>();
-    }
-
-    // put operation need to be synchronized
-    public synchronized void put(String key, String value) {
-        this.storage.put(key, value);
-    }
-
-    // delete operation need to be synchronized
-    public synchronized void delete(String key) {
-        this.storage.remove(key);
-    }
-    // get operation need to be synchronized
-    public synchronized String get(String key) {
-        return this.storage.get(key);
-    }
-}
-
-/**
  * This is a class that implements the Runnable interface. It will run on a separate thread.
  * This class will take the client input and call the correct method to perform the operation
  * towards the data store.
  */
 class Process implements Runnable {
-    Store store;
     Request request;
     Response response;
+    Database db;
 
-    public Process (Store store, Request request) {
-        this.store = store;
+    public Process (Request request, Database db) {
         this.request = request;
         this.response = null;
+        this.db = db;
     }
 
     public Response getResponse() {
         return response;
     }
+    public void run(){
+        try {
+            processRequest();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // this method will perform the actual operations
-    public void run() {
-        Logger logger = Logger.getLogger("DataStoreImpl");
+    public void processRequest() throws Exception {
+        Logger logger = Logger.getLogger("DatabaseCrud");
         Request.Operation operation = request.getOperation();
         String filename = request.getFilename();
+        String filepath = "/Users/april/Desktop/" + filename;
         if (operation.equals(Request.Operation.UPLOAD)) {
             // Upload to db
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
+            String content = db.upload(filepath);
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+            logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully uploaded " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.UPDATE)) {
             // Update on db
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
+            String content = db.update(filepath);
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+            logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully updated " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DELETE)) {
             // Delete on db
+            db.delete(filepath);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
-        } else if (operation.equals(Request.Operation.DOWNLOAD)) {
-            // DOWNLOAD on db
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
+            logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully deleted " + "\"" + filepath + "\"" );
         } else {
             this.response = new Response("400", operation.toString(), Response.Status.FAILED, filename);
+            logger.warning(new Timestamp(System.currentTimeMillis()) + "ERROR: Process request " + request.getOperation().toString());
         }
     }
 }

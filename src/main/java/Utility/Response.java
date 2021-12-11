@@ -15,6 +15,7 @@ public class Response implements Serializable {
     private String operation;
     private Status status;
     private String filename;
+    private String content;
 
     public String getResponseCode() {
         return responseCode;
@@ -28,12 +29,21 @@ public class Response implements Serializable {
     public String getFilename() {
         return filename;
     }
+    public String getContent() {
+        return content;
+    }
 
     public Response(String responseCode, String operation, Status status, String filename) {
+        this(responseCode, operation, status, filename, null);
+    }
+
+
+    public Response(String responseCode, String operation, Status status, String filename, String content) {
         this.responseCode = responseCode;
         this.operation = operation;
         this.status = status;
         this.filename = filename;
+        this.content = content;
     }
 
     /**
@@ -44,7 +54,7 @@ public class Response implements Serializable {
      */
     @Override
     public String toString() {
-        return String.format("Code: %s, + Operation: %s, + Filename: %s, + Status: %s.", responseCode, operation, filename, status);
+        return String.format("Code: %s, + Operation: %s, + Filename: %s, + Content: %s, + Status: %s.", responseCode, operation, filename, content, status);
     }
 }
 
