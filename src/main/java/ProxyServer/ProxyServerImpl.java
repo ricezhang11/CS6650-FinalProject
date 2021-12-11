@@ -213,7 +213,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         Response response = null;
         for (String address : this.learnerAddresses) {
             Learner l = (Learner) Naming.lookup(address);
-            response = l.commit(acceptedValue);
+            response = l.commit(Request.createRequest(acceptedValue));
         }
 
         logger.info(new Timestamp(System.currentTimeMillis()) + " Response from the learner is " + response.toString());
