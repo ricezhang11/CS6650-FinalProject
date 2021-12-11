@@ -4,6 +4,7 @@ import Database.Database;
 import Utility.Request;
 import Utility.Response;
 
+import java.io.FileOutputStream;
 import java.sql.Timestamp;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,7 +24,7 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
         super();
         this.port = port;
         this.pool = Executors.newFixedThreadPool(5);
-        this.db = new Database("defaultDatabase", "myCollection");
+//        this.db = new Database("defaultDatabase", "myCollection");
     }
 
     /**
@@ -60,6 +61,8 @@ class Process implements Runnable {
     Request request;
     Response response;
     Database db;
+//    TODO: add newStr for updating the db
+//    String newStr;
 
     public Process (Request request, Database db) {
         this.request = request;
@@ -85,6 +88,9 @@ class Process implements Runnable {
         String filename = request.getFilename();
         String filepath = "/Users/april/Desktop/" + filename;
         if (operation.equals(Request.Operation.UPLOAD)) {
+            try (FileOutputStream fos = new FileOutputStream(filepath)) {
+                fos.write(request.getData());
+            }
             // Upload to db
 //            String content = db.upload(filepath);
 //            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
@@ -92,16 +98,21 @@ class Process implements Runnable {
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully uploaded " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.UPDATE)) {
             // Update on db
-//            String content = db.update(filepath);
-//            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
-            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "update");
+            String content = db.update(filepath, new String(request.getData()));
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully updated " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DELETE)) {
             // Delete on db
 //            db.delete(filepath);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully deleted " + "\"" + filepath + "\"" );
-        } else {
+        } else if (operation.equals(Request.Operation.DOWNLOAD)) {
+            // Download on db
+            String content = db.download(filepath);
+            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
+            logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully downloaded " + "\"" + filepath + "\"");
+        }
+        else {
             this.response = new Response("400", operation.toString(), Response.Status.FAILED, filename);
             logger.warning(new Timestamp(System.currentTimeMillis()) + "ERROR: Process request " + request.getOperation().toString());
         }
