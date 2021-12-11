@@ -23,7 +23,7 @@ public class LearnerImpl extends java.rmi.server.UnicastRemoteObject implements 
         super();
         this.port = port;
         this.pool = Executors.newFixedThreadPool(5);
-        this.db = new Database("defaultDatabase", "myCollection");
+//        this.db = new Database("defaultDatabase", "myCollection");
     }
 
     /**
@@ -60,6 +60,8 @@ class Process implements Runnable {
     Request request;
     Response response;
     Database db;
+//    TODO: add newStr for updating the db
+//    String newStr;
 
     public Process (Request request, Database db) {
         this.request = request;
@@ -91,7 +93,8 @@ class Process implements Runnable {
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully uploaded " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.UPDATE)) {
             // Update on db
-            String content = db.update(filepath);
+            String newStr;
+            String content = db.update(filepath, newStr);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully updated " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DELETE)) {
