@@ -95,7 +95,6 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             Scanner fileReader = new Scanner(clientRequestFile);
             String data = null;
             if (fileReader.hasNext()) {
-                Thread.sleep(2000);
                 data = fileReader.nextLine();
                 System.out.println(data);
 //                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
@@ -139,7 +138,6 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         // this is to record the final agreed on value
         String acceptedValue = "";
 
-        Thread.sleep(3000);
         // If the proposer didn't get a quorum in either the prepare phase or the accept phase, it'll keep trying.
         // This is assuming that if the proposer keeps trying and it will eventually get its turn. The eventual agreed on value
         // might be not the original client request, but will be something that all servers agreed on and successfully committed
