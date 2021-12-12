@@ -86,15 +86,18 @@ class Process implements Runnable {
     // this method will perform the actual operations
     public void processRequest() throws Exception {
         Logger logger = Logger.getLogger("DatabaseCrud");
+        // retrieve the operation, filepath from the request message
         Request.Operation operation = request.getOperation();
         String filename = request.getFilename();
         String filepath = System.getProperty("user.dir") + "/" + request.getClientFolderName() + "/" + filename;
         System.out.println("!!!!!!!!!!!!!!!!!!");
         System.out.println(filepath);
+        // if the operation is UPLOAD
         if (operation.equals(Request.Operation.UPLOAD)) {
-            try (FileOutputStream fos = new FileOutputStream(filepath)) {
-                fos.write(request.getData());
-            }
+            // ?????
+//            try (FileOutputStream fos = new FileOutputStream(filepath)) {
+//                fos.write(request.getData());
+//            }
             // Upload to db
             String content = db.upload(filepath);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
