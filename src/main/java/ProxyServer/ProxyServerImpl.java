@@ -217,10 +217,11 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
 
         // the proposer asks all learners to perform the operation, gets their response and returns that to the client
         Response response = null;
-        for (String address : this.learnerAddresses) {
-            Learner l = (Learner) Naming.lookup(address);
-            response = l.commit(Request.createRequest(acceptedValue, ""));
-        }
+        Random random = new Random();
+        // randomly pick a learner and return its address
+        int index = new Random().nextInt(5);
+        Learner l = (Learner) Naming.lookup(this.learnerAddresses.get(index));
+        response = l.commit(Request.createRequest(acceptedValue, ""));
 
         logger.info(new Timestamp(System.currentTimeMillis()) + " Response from the learner is " + response.toString());
 
@@ -235,8 +236,6 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         }
 
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
-
-        //TODO: ask learners to store changes in DB
 
         //TODO: send messages to clients that they should update their files
         // 1. open ClientQueueRegistry.txt file

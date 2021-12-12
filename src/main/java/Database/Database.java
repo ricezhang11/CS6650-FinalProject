@@ -91,17 +91,30 @@ public class Database {
         System.out.printf("[delete] file %s successfully!", fileName);
     }
 
-    public String update(String filePath, String newStr) throws Exception {
+    public String update(String filePath) throws Exception {
         if (!filePath.endsWith("txt")) {
             throw new Exception("file is not txt");
         }
         MongoDatabase db = mongoClient.getDatabase(this.mongoDBName);
         MongoCollection<Document> collection = db.getCollection(this.mongoDBCollection);
+
         File file = new File(filePath);
         String fileName = file.getName();
-        collection.updateOne(Filters.eq("fileName", fileName), Updates.set("txt", newStr));
-        System.out.printf("[update] file %s successfully!", fileName);
-        return newStr;
+        BufferedReader reader;
+        String wholeString = "";
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String tempString;
+            while ((tempString = reader.readLine()) != null) {
+                wholeString += tempString;
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        collection.updateOne(Filters.eq("fileName", fileName), Updates.set("txt", wholeString));
+        System.out.printf("[update] file %s successfully! with contents %s", fileName, wholeString);
+        return wholeString;
     }
 
     public String download(String filePath) throws Exception {

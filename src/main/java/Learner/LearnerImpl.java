@@ -99,30 +99,37 @@ class Process implements Runnable {
 //                fos.write(request.getData());
 //            }
             // Upload to db
+            System.out.println("executing UPLOAD operation");
             String content = db.upload(filepath);
+            System.out.println("content is:" + content);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
 //            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "upload");
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully uploaded " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.UPDATE)) {
             // Update on db
-            String content = db.update(filepath, new String(request.getData()));
+            System.out.println("executing UPDATE operation");
+            String content = db.update(filepath);
 //            String content = db.update(filepath, "test update");
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
 //            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "update");
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully updated " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DELETE)) {
             // Delete on db
+            System.out.println("executing DELETE operation");
             db.delete(filepath);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename);
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully deleted " + "\"" + filepath + "\"" );
         } else if (operation.equals(Request.Operation.DOWNLOAD)) {
             // Download on db
+            System.out.println("executing DOWNLOAD operation");
             String content = db.download(filepath);
+            System.out.println("content is:" + content);
             this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, content);
 //            this.response = new Response("200", operation.toString(), Response.Status.SUCCEED, filename, "download");
             logger.info(new Timestamp(System.currentTimeMillis()) + "Successfully downloaded " + "\"" + filepath + "\"");
         }
         else {
+            System.out.println("ERROR! not executing anything");
             this.response = new Response("400", operation.toString(), Response.Status.FAILED, filename);
             logger.warning(new Timestamp(System.currentTimeMillis()) + "ERROR: Process request " + request.getOperation().toString());
         }
