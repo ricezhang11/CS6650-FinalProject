@@ -1,6 +1,5 @@
 import JMSPublisher.JMSPublisher;
 import JMSReceiver.JMSReceiver;
-import ProxyServer.ProxyServer;
 import Utility.Request;
 import Utility.Response;
 
@@ -10,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.rmi.Naming;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Logger;
@@ -22,7 +20,7 @@ public class DataStoreClient {
     private final String clientCreationTimestamp = new Timestamp(System.currentTimeMillis()).toString();
     private final String clientQueueName = "cs6650-server response queue" + clientCreationTimestamp;
     private final String serverResponseFileName = "ServerResponse" + clientCreationTimestamp + ".txt";
-    private final String clientFolderName = "Client" + clientCreationTimestamp;
+    private final String clientFolderName = ("Client" + clientCreationTimestamp).replace(":", "-");
 
     /**
      * initialize message publisher and receiver, register client message queue with JMS
@@ -152,8 +150,7 @@ public class DataStoreClient {
      */
     public static void main(String[] args) throws JMSException, IOException, InterruptedException {
         Logger logger = Logger.getLogger("DataStoreClient");
-        logger.info(new Timestamp(System.currentTimeMillis()) + " Client is up and running!");
-        logger.info(new Timestamp(System.currentTimeMillis()) + " Sending initial requests");
+        logger.info(new Timestamp(System.currentTimeMillis()) + " Client is up and running!--changed mq");
         DataStoreClient client = new DataStoreClient();
         Random random = new Random();
         String assignedServer = null;
@@ -164,15 +161,15 @@ public class DataStoreClient {
         String userInput = "";
 
         // start a separate worker thread to read the files
-        ReadWorker readWorker = new ReadWorker(client.serverResponseFileName);
-        readWorker.start();
+        ReadAndUpdateWorker readAndUpdateWorker = new ReadAndUpdateWorker(client.serverResponseFileName, client.clientFolderName);
+        readAndUpdateWorker.start();
 
         // continue to receive following requests until user enters "quit"
         // to gracefully stop the client (clean up files etc.) use "quit" to kill client instead of Ctrl + C.
         while (true) {
             try {
                 System.out.println("Please enter a valid operation below:");
-                System.out.println("----VALID operations includes operation:UPLOAD filename:sample.txt|DOWNLOAD filename|UPDATE filename|DELETE filename----");
+                System.out.println("----Examples: operation:UPLOAD, filename:sample.txt|operation:DOWNLOAD, filename:sample.txt|operation:UPDATE, filename:sample.txt|operation:DELETE, filename:sample.txt----");
                 // retrieve user input
                 userInput = reader.readLine();
 
@@ -180,7 +177,7 @@ public class DataStoreClient {
                     break;
                 }
                 // Create a request based on user input.
-                Request currRequest = Request.createRequest(userInput);
+                Request currRequest = Request.createRequest(userInput, client.clientFolderName);
 
                 // send message to message queue
                 client.jmsPublisher.sendMessage(currRequest.toString());
@@ -192,7 +189,7 @@ public class DataStoreClient {
         }
         // clean up thread, file and deregister queue when stopping the client
         // TODO: thread clean up is not working correctly at this point
-        readWorker.interrupt();
+        readAndUpdateWorker.interrupt();
         client.closeConnections();
         client.cleanUpFile();
         client.cleanUpFolder(new File(System.getProperty("user.dir") + "/" + client.clientFolderName));
@@ -200,21 +197,22 @@ public class DataStoreClient {
     }
 }
 
-class ReadWorker extends Thread {
+class ReadAndUpdateWorker extends Thread {
     String serverResponseFileName;
-    public ReadWorker(String serverResponseFileName) {
+    String clientFolderName;
+
+    public ReadAndUpdateWorker(String serverResponseFileName, String clientFolderName) {
         this.serverResponseFileName = serverResponseFileName;
+        this.clientFolderName = clientFolderName;
     }
 
-    public void run(){
-        // TODO: delete this line after done testing!!!!
-        System.out.println("MyThread running");
+    public void run() {
         // retrieve response from message queue
 //        File responseFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/" + this.serverResponseFileName);
         File responseFile = new File(System.getProperty("user.dir") + "/JMSReceiver/" + this.serverResponseFileName);
 
         // non-stop check whether there are new messages (responses) coming in. If so, print out the message (responses)
-        while(true) {
+        while (true) {
             Scanner fileReader = null;
             try {
                 fileReader = new Scanner(responseFile);
@@ -239,15 +237,39 @@ class ReadWorker extends Thread {
             }
 
             for (String response : responses) {
+//                System.out.println("hello!" + response);
                 Response newResponse = Response.createResponse(response);
+                System.out.println(newResponse.toString());
+                System.out.println("----Automatically updating your local files....----");
                 if (newResponse.getStatus() == Response.Status.SUCCEED) {
                     if (newResponse.getOperation().equals(Request.Operation.UPLOAD.toString())) {
+                        try {
+                            new File(System.getProperty("user.dir") + "/" + this.clientFolderName + "/" + newResponse.getFilename()).createNewFile();
+                            File file = new File(System.getProperty("user.dir") + "/" + this.clientFolderName + "/" + newResponse.getFilename());
+
+                            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                            writer.write(newResponse.getContent());
+                            writer.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (newResponse.getOperation().equals(Request.Operation.UPDATE.toString()) || newResponse.getOperation().equals(Request.Operation.DOWNLOAD.toString())) {
+                        File file = new File(System.getProperty("user.dir") + "/" + this.clientFolderName + "/" + newResponse.getFilename());
+                        try {
+                            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                            writer.write(newResponse.getContent());
+                            writer.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (newResponse.getOperation().equals(Request.Operation.DELETE.toString())) {
+                        new File(System.getProperty("user.dir") + "/" + this.clientFolderName + "/" + newResponse.getFilename()).delete();
                     }
                 }
-                System.out.println("The response received: " + newResponse.toString());
+                System.out.println("----Update finished :)----");
+                System.out.println("Please enter a valid operation below:");
+                System.out.println("----Examples: operation:UPLOAD, filename:sample.txt|operation:DOWNLOAD, filename:sample.txt|operation:UPDATE, filename:sample.txt|operation:DELETE, filename:sample.txt----");
             }
-
-
         }
     }
 }

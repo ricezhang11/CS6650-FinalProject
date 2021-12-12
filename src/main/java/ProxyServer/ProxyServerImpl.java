@@ -84,17 +84,18 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
             e.printStackTrace();
             throw e;
         }
-        System.out.println("still alive!");
+//        System.out.println("still alive!");
 //        File clientRequestFile = new File(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt");
         File clientRequestFile = new File(System.getProperty("user.dir") + "/JMSReceiver/ClientRequest.txt");
 
 
-        System.out.println("still alive here!");
+//        System.out.println("still alive here!");
         // non-stop check whether there are new messages (requests) coming in. If so, print out the message (request) and initiate Paxos
         while(true) {
             Scanner fileReader = new Scanner(clientRequestFile);
             String data = null;
             if (fileReader.hasNext()) {
+                Thread.sleep(2000);
                 data = fileReader.nextLine();
                 System.out.println(data);
 //                AsynchronousFileChannel.open(Path.of(System.getProperty("user.dir") + "/src/main/java" + "/JMSReceiver/ClientRequest.txt"), StandardOpenOption.WRITE).truncate(0).close();
@@ -138,7 +139,7 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         // this is to record the final agreed on value
         String acceptedValue = "";
 
-
+        Thread.sleep(3000);
         // If the proposer didn't get a quorum in either the prepare phase or the accept phase, it'll keep trying.
         // This is assuming that if the proposer keeps trying and it will eventually get its turn. The eventual agreed on value
         // might be not the original client request, but will be something that all servers agreed on and successfully committed
@@ -217,10 +218,11 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
 
         // the proposer asks all learners to perform the operation, gets their response and returns that to the client
         Response response = null;
-        for (String address : this.learnerAddresses) {
-            Learner l = (Learner) Naming.lookup(address);
-            response = l.commit(Request.createRequest(acceptedValue));
-        }
+        Random random = new Random();
+        // randomly pick a learner and return its address
+        int index = new Random().nextInt(5);
+        Learner l = (Learner) Naming.lookup(this.learnerAddresses.get(index));
+        response = l.commit(Request.createRequest(acceptedValue, ""));
 
         logger.info(new Timestamp(System.currentTimeMillis()) + " Response from the learner is " + response.toString());
 
@@ -236,8 +238,6 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
 
         logger.info(new Timestamp(System.currentTimeMillis()) + " Finished resetting all acceptors' logs");
 
-        //TODO: ask learners to store changes in DB
-
         //TODO: send messages to clients that they should update their files
         // 1. open ClientQueueRegistry.txt file
         // 2. initialize JMSPublisher to publish the committed value to these queue
@@ -247,8 +247,8 @@ public class ProxyServerImpl extends java.rmi.server.UnicastRemoteObject impleme
         Scanner fileReader = new Scanner(clientQueueRegistryFile);
         while (fileReader.hasNext()) {
             String queue = fileReader.nextLine();
-            System.out.println("------------------------------");
-            System.out.println(queue);
+//            System.out.println("------------------------------");
+//            System.out.println(queue);
             JMSPublisher jmsPublisher = new JMSPublisher(queue);
             jmsPublisher.sendMessage(response.toString());
             jmsPublisher.closeConnection();

@@ -53,7 +53,7 @@ public class Response implements Serializable {
      */
     @Override
     public String toString() {
-        return String.format("Code: %s, + Operation: %s, + Filename: %s, + Content: %s, + Status: %s.", responseCode, operation, filename, content, status);
+        return String.format("Code: " + responseCode + ", Operation:" + operation + ", Filename:" + filename + ", Content:" +  content + ", Status:" + status);
     }
 
     // use by clients to deserialize response string retrieved from the message queue

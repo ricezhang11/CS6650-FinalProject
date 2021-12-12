@@ -16,6 +16,7 @@ public class Request implements Serializable {
     private Operation operation;
     private String filename;
     private byte[] data;
+    private String clientFolderName;
 
     public Operation getOperation() {
         return operation;
@@ -26,6 +27,7 @@ public class Request implements Serializable {
     public byte[] getData() {
         return data;
     }
+    public String getClientFolderName() { return clientFolderName;}
 
     /**
      * Constructor for the request UPLOAD|UPDATE.
@@ -39,6 +41,14 @@ public class Request implements Serializable {
         this.filename = filename;
         this.data = data;
     }
+
+    public Request (Operation operation, String filename, byte[] data, String clientFolderName) {
+        this.operation = operation;
+        this.filename = filename;
+        this.data = data;
+        this.clientFolderName = clientFolderName;
+    }
+
 
     /**
      * Constructor for the request DOWNLOAD|DELETE.
@@ -64,7 +74,10 @@ public class Request implements Serializable {
                 return false;
             }
         } else if (request.getOperation() == Operation.DOWNLOAD || request.getOperation() == Operation.DELETE) {
-            if (request.filename == null || request.data != null) {
+//            if (request.filename == null || request.data != null) {
+//                return false;
+//            }
+            if (request.filename == null) {
                 return false;
             }
         } else {
@@ -81,7 +94,7 @@ public class Request implements Serializable {
      */
     @Override
     public String toString() {
-        String res = String.format("operation: %s, filename: %s", operation.toString(), filename);
+        String res = String.format("operation: %s, filename: %s, clientFolderName: %s", operation.toString(), filename, clientFolderName);
         if (data != null) {
             res += ", data: " + data.length + " bytes.";
         } else {
@@ -97,42 +110,66 @@ public class Request implements Serializable {
      * @param input
      * @return
      */
-    public static Request createRequest(String input) {
+    public static Request createRequest(String input, String clientFolderName) {
         if (input == null || input.length() == 0) {
             throw new IllegalArgumentException("The input is invalid.");
         }
 
         // The input should be in a format of "operation, filename".
         String[] parts = input.trim().split(",");
-        if (parts.length != 2 && parts.length != 3) {
-            System.out.println(parts);
+        if (parts.length != 2 && parts.length != 3 && parts.length != 4) {
             throw new IllegalArgumentException("Malformed request with " + parts.length + " parts.");
         }
 
         // Parse the string.
         Operation operation = null;
         String filename = null;
+        String folder = null;
         byte[] data = null;
         for (String part : parts) {
             String[] pair = part.trim().split(":");
             // It should contain the name and the corresponding value.
-            if (pair.length != 2) {
-                throw new IllegalArgumentException("The value of the element is missing.");
-            }
+//            if (pair.length != 3 && pair.length != 2) {
+//                throw new IllegalArgumentException("The value of the element is missing.");
+//            }
             if (pair[0].trim().equals("operation")) {
                 operation = Operation.valueOf(pair[1].trim());
             } else if (pair[0].trim().equals("filename")) {
                 filename = pair[1].trim();
+            } else if (pair[0].trim().equals("clientFolderName")) {
+                folder = pair[1].trim();
             }
         }
 
         // Load the file data.
+//        try {
+//            if (clientFolderName.equals("")) {
+//                data = loadFile(filename, folder);
+//            } else{
+//                data = loadFile(filename, clientFolderName);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
         try {
-            data = loadFile(filename);
+            if (operation == Operation.UPLOAD || operation == Operation.UPDATE) {
+                if (clientFolderName.equals("")) {
+                    data = loadFile(filename, folder);
+                } else{
+                    data = loadFile(filename, clientFolderName);
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Request result = new Request(operation, filename, data);
+
+        Request result;
+        if (clientFolderName.equals("")) {
+            result = new Request(operation, filename, data, folder);
+        } else {
+            result = new Request(operation, filename, data, clientFolderName);
+        }
 
         // Validate the request before finishing.
         if (!isValid(result)) {
@@ -148,12 +185,12 @@ public class Request implements Serializable {
      * @return
      * @throws IOException
      */
-    private static byte[] loadFile(String filename) throws IOException {
+    private static byte[] loadFile(String filename, String clientFolderName) throws IOException {
 //        File file = new File(System.getProperty("user.dir") + "/src/main/java" + filename);
-        File file = new File(System.getProperty("user.dir") + "/" + filename);
+        File file = new File(System.getProperty("user.dir") + "/" + clientFolderName + "/" + filename);
 
         // Assuming files are small and can fit in memory
-        byte[] data= new byte[(int) (file.length())];
+        byte[]  data= new byte[(int) (file.length())];
 
         FileInputStream fileInputStream = null;
         try {
